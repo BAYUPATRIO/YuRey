@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JokiTugas Elite - Sistem Informasi Jasa Akademik Premium</title>
+    <meta name="description" content="Platform joki tugas nomor 1 di Indonesia. Sistem terintegrasi, aman, dan profesional.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        },
+                        accent: {
+                            light: '#fcd34d',
+                            DEFAULT: '#f59e0b',
+                            dark: '#b45309',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .glass {
+                @apply bg-white/70 backdrop-blur-lg border border-white/20 dark:bg-gray-900/70 dark:border-gray-700;
+            }
+            .glass-card {
+                @apply bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none;
+            }
+            .text-gradient {
+                @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-purple-600;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+        .dark ::-webkit-scrollbar-thumb { background-color: #475569; }
+
+        /* Loader */
+        .loader-container { position: fixed; inset: 0; z-index: 9999; background: #fff; display: flex; justify-content: center; align-items: center; transition: opacity 0.6s ease; }
+        .dark .loader-container { background: #0f172a; }
+        
+        /* Mobile Nav Adjustment */
+        body { padding-bottom: 90px; }
+        @media (min-width: 768px) { body { padding-bottom: 0; } }
+
+        /* Toast Notification */
+        #toast-container { position: fixed; bottom: 100px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        @media (min-width: 768px) { #toast-container { bottom: 20px; } }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-300 overflow-x-hidden selection:bg-brand-500 selection:text-white">
+
+    <div id="preloader" class="loader-container">
+        <div class="text-center">
+            <div class="relative w-20 h-20 mx-auto mb-4">
+                <div class="absolute inset-0 rounded-full border-4 border-gray-200 dark:border-gray-700"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-brand-600 border-t-transparent animate-spin"></div>
+                <i class="fas fa-rocket absolute inset-0 m-auto text-brand-600 text-xl flex items-center justify-center"></i>
+            </div>
+            <h2 class="text-xl font-bold tracking-tight">JokiTugas<span class="text-brand-600">Elite</span></h2>
+            <p class="text-xs text-gray-400 mt-2" id="loading-text">Memuat Sistem...</p>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <div id="live-ticker" class="fixed bottom-[90px] left-4 md:bottom-8 md:left-8 z-40 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border-l-4 border-green-500 flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-500 max-w-[300px]">
+        <div class="bg-green-100 dark:bg-green-900/30 p-2 rounded-full text-green-600">
+            <i class="fas fa-cart-plus"></i>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-gray-800 dark:text-white" id="ticker-title">Pesanan Baru!</p>
+            <p class="text-[10px] text-gray-500 dark:text-gray-400" id="ticker-desc">Andi - Makalah Hukum (2 Menit lalu)</p>
+        </div>
+    </div>
+
+    <header id="desktop-header" class="hidden md:block fixed top-0 w-full z-50 transition-all duration-300 bg-white/80 backdrop-blur-md border-b border-gray-100 dark:bg-gray-900/80 dark:border-gray-800">
+        <div class="container mx-auto px-6 h-20 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold flex items-center gap-2 group">
+                <span class="w-10 h-10 bg-brand-600 rounded-xl text-white flex items-center justify-center text-lg transform group-hover:rotate-12 transition-transform shadow-lg shadow-brand-600/30">
+                    <i class="fas fa-graduation-cap"></i>
+                </span>
+                <span>JokiTugas<span class="text-brand-600">Elite</span></span>
+            </a>
+
+            <nav class="flex items-center gap-8 font-medium text-sm text-gray-600 dark:text-gray-300">
+                <a href="#home" class="hover:text-brand-600 transition">Beranda</a>
+                <a href="#services" class="hover:text-brand-600 transition">Layanan</a>
+                <a href="#portfolio" class="hover:text-brand-600 transition">Portfolio</a>
+                <a href="#pricing" class="hover:text-brand-600 transition">Harga</a>
+                <a href="#faq" class="hover:text-brand-600 transition">FAQ</a>
+            </nav>
+
+            <div class="flex items-center gap-4">
+                <button onclick="toggleTheme()" class="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-700 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:block text-yellow-400"></i>
+                </button>
+                <a href="#order" class="bg-brand-600 hover:bg-brand-700 text-white px-6 py-2.5 rounded-full font-semibold text-sm transition shadow-lg shadow-brand-600/20 hover:shadow-brand-600/40 transform hover:-translate-y-0.5">
+                    Buat Pesanan
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="md:hidden fixed top-0 w-full z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur border-b border-gray-200 dark:border-gray-800 px-4 h-16 flex justify-between items-center">
+        <div class="flex items-center gap-2 font-bold text-lg">
+            <i class="fas fa-graduation-cap text-brand-600"></i>
+            <span>JokiTugas<span class="text-brand-600">Elite</span></span>
+        </div>
+        <button onclick="toggleTheme()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300">
+            <i class="fas fa-moon dark:hidden text-xs"></i>
+            <i class="fas fa-sun hidden dark:block text-yellow-400 text-xs"></i>
+        </button>
+    </div>
+
+    <main class="overflow-hidden">
+        
+        <section id="home" class="relative pt-28 pb-20 md:pt-40 md:pb-32">
+            <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+                <div class="absolute top-0 left-1/4 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+                <div class="absolute top-0 right-1/4 w-96 h-96 bg-brand-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+                <div class="absolute -bottom-32 left-1/3 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+            </div>
+
+            <div class="container mx-auto px-4 text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-900/30 border border-brand-100 dark:border-brand-700 text-brand-600 dark:text-brand-400 text-xs font-bold mb-6" data-aos="fade-down">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+                    </span>
+                    JASA JOKI ONLINE #1 TERPERCAYA
+                </div>
+
+                <h1 class="text-4xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight" data-aos="fade-up" data-aos-delay="100">
+                    Solusi Tugas Akademik <br class="hidden md:block">
+                    <span class="text-gradient">Cepat & Profesional</span>
+                </h1>
+
+                <p class="text-gray-600 dark:text-gray-300 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed" data-aos="fade-up" data-aos-delay="200">
+                    Bebaskan dirimu dari beban deadline. Tim ahli kami siap mengerjakan Coding, Makalah, Skripsi, dan Desain dengan jaminan kualitas tinggi.
+                </p>
+
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4" data-aos="fade-up" data-aos-delay="300">
+                    <a href="#order" class="w-full sm:w-auto px-8 py-4 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-xl shadow-brand-600/30 transition transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                        <i class="fab fa-whatsapp text-xl"></i> Konsultasi Gratis
+                    </a>
+                    <a href="#services" class="w-full sm:w-auto px-8 py-4 bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-search text-xl"></i> Cek Layanan
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 max-w-4xl mx-auto" data-aos="fade-up" data-aos-delay="400">
+                    <div class="p-4 rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur border border-gray-100 dark:border-gray-700">
+                        <div class="text-3xl font-bold text-brand-600">2.5k+</div>
+                        <div class="text-xs text-gray-500 uppercase font-semibold">Project Selesai</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur border border-gray-100 dark:border-gray-700">
+                        <div class="text-3xl font-bold text-purple-600">98%</div>
+                        <div class="text-xs text-gray-500 uppercase font-semibold">Kepuasan Klien</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur border border-gray-100 dark:border-gray-700">
+                        <div class="text-3xl font-bold text-pink-600">15+</div>
+                        <div class="text-xs text-gray-500 uppercase font-semibold">Tim Ahli</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur border border-gray-100 dark:border-gray-700">
+                        <div class="text-3xl font-bold text-green-600">24/7</div>
+                        <div class="text-xs text-gray-500 uppercase font-semibold">Support Live</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="services" class="py-20 bg-white dark:bg-gray-900 relative">
+            <div class="container mx-auto px-4">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
+                    <div data-aos="fade-right">
+                        <span class="text-brand-600 font-bold tracking-wider uppercase text-sm">Layanan Kami</span>
+                        <h2 class="text-3xl md:text-4xl font-bold mt-2">Kategori Tugas</h2>
+                    </div>
+                    <div class="flex gap-2 overflow-x-auto pb-2 w-full md:w-auto no-scrollbar" id="service-filters">
+                        </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="services-grid">
+                    </div>
+            </div>
+        </section>
+
+        <section id="pricing" class="py-20 bg-gray-50 dark:bg-gray-950">
+            <div class="container mx-auto px-4">
+                <div class="max-w-5xl mx-auto bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row">
+                    <div class="p-8 lg:p-12 lg:w-2/3">
+                        <h3 class="text-2xl font-bold mb-6">Kalkulator Estimasi Biaya</h3>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Jenis Tugas</label>
+                                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                    <button onclick="setTaskType(this, 50000)" class="task-btn active px-4 py-3 rounded-xl border border-brand-500 bg-brand-50 text-brand-700 font-medium text-sm transition">Makalah</button>
+                                    <button onclick="setTaskType(this, 100000)" class="task-btn px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-brand-500 dark:hover:border-brand-500 font-medium text-sm transition">PPT Slide</button>
+                                    <button onclick="setTaskType(this, 250000)" class="task-btn px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-brand-500 dark:hover:border-brand-500 font-medium text-sm transition">Coding Web</button>
+                                    <button onclick="setTaskType(this, 150000)" class="task-btn px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-brand-500 dark:hover:border-brand-500 font-medium text-sm transition">Desain</button>
+                                    <button onclick="setTaskType(this, 300000)" class="task-btn px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-brand-500 dark:hover:border-brand-500 font-medium text-sm transition">Analisis Data</button>
+                                    <button onclick="setTaskType(this, 75000)" class="task-btn px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-brand-500 dark:hover:border-brand-500 font-medium text-sm transition">Resume</button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                        <label class="text-sm font-semibold">Tingkat Kesulitan</label>
+                                        <span class="text-sm text-brand-600 font-bold" id="diff-label">Normal (x1)</span>
+                                    </div>
+                                    <input type="range" min="1" max="3" step="0.5" value="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-600" id="difficulty-slider" oninput="calculateTotal()">
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                        <label class="text-sm font-semibold">Deadline (Hari)</label>
+                                        <span class="text-sm text-brand-600 font-bold" id="deadline-label">3 Hari</span>
+                                    </div>
+                                    <input type="range" min="1" max="7" step="1" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-600" id="deadline-slider" oninput="calculateTotal()">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold mb-3">Layanan Tambahan</label>
+                                <div class="space-y-3">
+                                    <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                                        <input type="checkbox" class="w-5 h-5 text-brand-600 rounded focus:ring-brand-500 addon-check" value="50000" onchange="calculateTotal()">
+                                        <div class="ml-3 flex-1">
+                                            <span class="block text-sm font-medium">Cek Plagiasi (Turnitin)</span>
+                                            <span class="block text-xs text-gray-500">Hasil PDF report full</span>
+                                        </div>
+                                        <span class="text-sm font-bold text-gray-600">+50rb</span>
+                                    </label>
+                                    <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                                        <input type="checkbox" class="w-5 h-5 text-brand-600 rounded focus:ring-brand-500 addon-check" value="100000" onchange="calculateTotal()">
+                                        <div class="ml-3 flex-1">
+                                            <span class="block text-sm font-medium">Source Code / File Mentah</span>
+                                            <span class="block text-xs text-gray-500">File asli .psd, .ai, source code</span>
+                                        </div>
+                                        <span class="text-sm font-bold text-gray-600">+100rb</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-brand-900 lg:w-1/3 p-8 lg:p-12 text-white flex flex-col justify-between relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-brand-500/20 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                        
+                        <div>
+                            <h4 class="text-brand-200 text-sm font-medium uppercase tracking-wider mb-2">Total Estimasi</h4>
+                            <div class="text-5xl font-bold mb-2" id="display-price">Rp 50rb</div>
+                            <p class="text-brand-300 text-xs leading-relaxed">*Harga ini adalah estimasi awal. Harga final ditentukan oleh admin setelah melihat detail soal.</p>
+                        </div>
+
+                        <div class="mt-8">
+                            <ul class="space-y-3 mb-8 text-sm text-brand-100">
+                                <li class="flex items-center gap-2"><i class="fas fa-check-circle text-green-400"></i> Garansi Revisi Sepuasnya</li>
+                                <li class="flex items-center gap-2"><i class="fas fa-check-circle text-green-400"></i> Privasi Data Aman 100%</li>
+                                <li class="flex items-center gap-2"><i class="fas fa-check-circle text-green-400"></i> Pengerjaan Tepat Waktu</li>
+                            </ul>
+                            <button onclick="scrollToOrder()" class="w-full py-4 bg-white text-brand-900 font-bold rounded-xl hover:bg-gray-100 transition shadow-lg transform active:scale-95">
+                                Pesan Sekarang
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="portfolio" class="py-20 bg-white dark:bg-gray-900">
+            <div class="container mx-auto px-4">
+                <div class="text-center max-w-2xl mx-auto mb-12">
+                    <h2 class="text-3xl font-bold mb-4">Hasil Karya Kami</h2>
+                    <p class="text-gray-600 dark:text-gray-400">Beberapa contoh tugas yang telah kami selesaikan dengan nilai memuaskan.</p>
+                </div>
+                
+                <div class="flex justify-center gap-2 mb-8 flex-wrap">
+                    <button class="px-5 py-2 rounded-full bg-brand-600 text-white text-sm font-medium shadow-lg shadow-brand-600/30" onclick="filterPortfolio('all')">Semua</button>
+                    <button class="px-5 py-2 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium hover:bg-gray-50" onclick="filterPortfolio('coding')">Coding</button>
+                    <button class="px-5 py-2 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium hover:bg-gray-50" onclick="filterPortfolio('writing')">Makalah</button>
+                    <button class="px-5 py-2 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium hover:bg-gray-50" onclick="filterPortfolio('design')">Desain</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="portfolio-grid">
+                    </div>
+            </div>
+        </section>
+
+        <section id="order" class="py-24 bg-gradient-to-br from-brand-50 to-white dark:from-gray-900 dark:to-gray-800">
+            <div class="container mx-auto px-4">
+                <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+                    <div class="bg-brand-600 p-6 text-center text-white">
+                        <h2 class="text-2xl font-bold">Formulir Pemesanan</h2>
+                        <p class="text-brand-100 text-sm">Isi data lengkap agar kami bisa memperkirakan harga dengan tepat.</p>
+                    </div>
+                    
+                    <form id="order-form" class="p-8 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="block text-sm font-semibold mb-2">Nama Lengkap</label>
+                                <input type="text" id="order-name" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-brand-500 outline-none transition" placeholder="Nama Anda" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="block text-sm font-semibold mb-2">WhatsApp / Email</label>
+                                <input type="text" id="order-contact" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-brand-500 outline-none transition" placeholder="Nomor WA aktif" required>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="block text-sm font-semibold mb-2">Kategori Tugas</label>
+                                <select id="order-category" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-brand-500 outline-none transition">
+                                    <option>Pilih Kategori...</option>
+                                    <option value="IT/Coding">IT / Coding Website / Aplikasi</option>
+                                    <option value="Makalah/Jurnal">Makalah / Jurnal / Essay</option>
+                                    <option value="Desain Grafis">Desain Grafis / Video</option>
+                                    <option value="Matematika">Matematika / Hitungan</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="block text-sm font-semibold mb-2">Deadline</label>
+                                <input type="datetime-local" id="order-deadline" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-brand-500 outline-none transition" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="block text-sm font-semibold mb-2">Detail Instruksi</label>
+                            <textarea id="order-detail" rows="5" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-brand-500 outline-none transition" placeholder="Jelaskan detail tugas Anda, sertakan link referensi jika ada..." required></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl shadow-lg shadow-green-500/30 transition transform hover:-translate-y-1 flex justify-center items-center gap-2">
+                            <i class="fab fa-whatsapp text-2xl"></i> Kirim ke WhatsApp Admin
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section id="faq" class="py-20 bg-white dark:bg-gray-900">
+            <div class="container mx-auto px-4 max-w-3xl">
+                <h2 class="text-3xl font-bold text-center mb-10">Frequently Asked Questions</h2>
+                <div class="space-y-4" id="faq-container">
+                    </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-900 text-gray-300 pt-16 pb-32 md:pb-10 border-t border-gray-800">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+                <div class="col-span-1 md:col-span-2">
+                    <h3 class="text-2xl font-bold text-white mb-4">JokiTugas<span class="text-brand-500">Elite</span></h3>
+                    <p class="mb-4 text-sm leading-relaxed max-w-sm">Partner akademik profesional yang membantu mahasiswa mencapai potensi terbaik mereka dengan bantuan tugas yang berkualitas dan terpercaya.</p>
+                    <div class="flex gap-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition text-white"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition text-white"><i class="fab fa-tiktok"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand-600 transition text-white"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4">Link Cepat</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#home" class="hover:text-white transition">Beranda</a></li>
+                        <li><a href="#services" class="hover:text-white transition">Layanan</a></li>
+                        <li><a href="#pricing" class="hover:text-white transition">Harga</a></li>
+                        <li><a href="#faq" class="hover:text-white transition">Syarat & Ketentuan</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4">Kontak</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li class="flex items-center gap-3"><i class="fab fa-whatsapp text-green-500"></i> 0812-7564-8770</li>
+                        <li class="flex items-center gap-3"><i class="fas fa-envelope text-brand-500"></i> admin@jokitugas.id</li>
+                        <li class="flex items-center gap-3"><i class="fas fa-map-pin text-red-500"></i> Padang, Indonesia</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-xs">
+                &copy; 2025 JokiTugas Elite. Developed with high complexity logic.
+            </div>
+        </div>
+    </footer>
+
+    <div class="md:hidden fixed bottom-0 w-full bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 pb-safe z-50">
+        <div class="grid grid-cols-5 h-16 items-center px-2">
+            <a href="#home" class="flex flex-col items-center justify-center text-brand-600 gap-1 h-full nav-mobile" onclick="activateMobileNav(this)">
+                <i class="fas fa-home text-lg"></i>
+                <span class="text-[10px] font-medium">Home</span>
+            </a>
+            <a href="#services" class="flex flex-col items-center justify-center text-gray-400 gap-1 h-full nav-mobile" onclick="activateMobileNav(this)">
+                <i class="fas fa-th-list text-lg"></i>
+                <span class="text-[10px] font-medium">Layanan</span>
+            </a>
+            
+            <div class="relative h-full flex items-center justify-center">
+                <a href="#order" class="absolute -top-6 w-14 h-14 bg-brand-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-brand-600/40 border-4 border-gray-50 dark:border-gray-900 transform active:scale-90 transition">
+                    <i class="fas fa-plus text-xl"></i>
+                </a>
+            </div>
+
+            <a href="#portfolio" class="flex flex-col items-center justify-center text-gray-400 gap-1 h-full nav-mobile" onclick="activateMobileNav(this)">
+                <i class="fas fa-images text-lg"></i>
+                <span class="text-[10px] font-medium">Porto</span>
+            </a>
+            <a href="#pricing" class="flex flex-col items-center justify-center text-gray-400 gap-1 h-full nav-mobile" onclick="activateMobileNav(this)">
+                <i class="fas fa-calculator text-lg"></i>
+                <span class="text-[10px] font-medium">Harga</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * APPLICATION STATE & DATA
+         * Simulating a database with Arrays
+         */
+        const APP_DATA = {
+            services: [
+                { id: 1, icon: 'fa-laptop-code', title: 'Web Development', desc: 'HTML, CSS, JS, PHP, Laravel, React. Fullstack atau Frontend.', category: 'coding', color: 'bg-blue-100 text-blue-600' },
+                { id: 2, icon: 'fa-book', title: 'Makalah & Essay', desc: 'Penulisan akademik sesuai EYD, referensi jurnal terpercaya, anti plagiasi.', category: 'writing', color: 'bg-yellow-100 text-yellow-600' },
+                { id: 3, icon: 'fa-chart-pie', title: 'Olah Data Statistik', desc: 'SPSS, SmartPLS, Eviews. Analisis data skripsi bab 4 & 5.', category: 'math', color: 'bg-green-100 text-green-600' },
+                { id: 4, icon: 'fa-paint-brush', title: 'Desain Grafis', desc: 'Poster, Feed IG, Banner, Logo, UI/UX Design menggunakan Figma/Canva.', category: 'design', color: 'bg-pink-100 text-pink-600' },
+                { id: 5, icon: 'fa-calculator', title: 'Matematika & Fisika', desc: 'Pengerjaan soal hitungan dengan jalan/langkah pengerjaan rinci.', category: 'math', color: 'bg-red-100 text-red-600' },
+                { id: 6, icon: 'fa-language', title: 'Translate & Inggris', desc: 'Terjemahan jurnal, abstrak, dan tugas bahasa Inggris (Grammar check).', category: 'writing', color: 'bg-purple-100 text-purple-600' }
+            ],
+            portfolio: [
+                { id: 1, img: 'https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=400&q=80', title: 'Website E-Commerce', category: 'coding', tag: 'Laravel' },
+                { id: 2, img: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=400&q=80', title: 'Makalah Hukum Pidana', category: 'writing', tag: 'PDF' },
+                { id: 3, img: 'https://images.unsplash.com/photo-1626785774573-4b799314346d?auto=format&fit=crop&w=400&q=80', title: 'Desain Poster Event', category: 'design', tag: 'Photoshop' },
+                { id: 4, img: 'https://images.unsplash.com/photo-1555099962-4199c345e5dd?auto=format&fit=crop&w=400&q=80', title: 'Sistem Absensi', category: 'coding', tag: 'Python' },
+                { id: 5, img: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=400&q=80', title: 'Analisis SPSS Bab 4', category: 'writing', tag: 'SPSS' },
+                { id: 6, img: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=400&q=80', title: 'UI Design App Mobile', category: 'design', tag: 'Figma' }
+            ],
+            faq: [
+                { q: 'Apakah privasi saya aman?', a: 'Sangat aman. Kami tidak pernah menyebarkan data klien. Chat akan dihapus secara berkala.' },
+                { q: 'Bagaimana sistem pembayarannya?', a: 'Sistem DP 50% di awal untuk mulai pengerjaan, pelunasan setelah tugas selesai dan preview dikirim.' },
+                { q: 'Apakah bisa revisi?', a: 'Gratis revisi 3x selama tidak merubah instruksi awal secara total.' }
+            ],
+            recentOrders: [
+                { name: 'Putri', item: 'Jurnal Ilmiah' },
+                { name: 'Dimas', item: 'Web Profile' },
+                { name: 'Siti', item: 'PPT Animasi' },
+                { name: 'Rizky', item: 'Olah Data' },
+                { name: 'Budi', item: 'Tugas Kalkulus' }
+            ]
+        };
+
+        // --- INIT & UTILS ---
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            // Initialize AOS Animation
+            AOS.init({
+                once: true,
+                duration: 800,
+                offset: 50
+            });
+
+            // Simulate Loading
+            setTimeout(() => {
+                document.getElementById('preloader').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('preloader').style.display = 'none';
+                    startLiveTicker();
+                }, 600);
+            }, 1500);
+
+            // Render Dynamic Content
+            renderServices();
+            renderPortfolio('all');
+            renderFAQ();
+            initTheme();
+        });
+
+        // Theme Handling
+        function initTheme() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        }
+
+        // --- RENDERING FUNCTIONS ---
+
+        function renderServices() {
+            const grid = document.getElementById('services-grid');
+            let html = '';
+            APP_DATA.services.forEach((item, index) => {
+                html += `
+                    <div class="glass-card p-8 rounded-3xl hover:-translate-y-2 transition-all duration-300 group" data-aos="fade-up" data-aos-delay="${index * 100}">
+                        <div class="w-14 h-14 ${item.color} rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                            <i class="fas ${item.icon}"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">${item.title}</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">${item.desc}</p>
+                    </div>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+
+        function renderPortfolio(filter) {
+            const grid = document.getElementById('portfolio-grid');
+            grid.innerHTML = '<div class="col-span-3 text-center py-10"><i class="fas fa-spinner fa-spin text-2xl text-brand-600"></i></div>'; // Loading state
+            
+            setTimeout(() => {
+                let filteredData = filter === 'all' ? APP_DATA.portfolio : APP_DATA.portfolio.filter(i => i.category === filter);
+                let html = '';
+                
+                filteredData.forEach(item => {
+                    html += `
+                        <div class="group relative rounded-xl overflow-hidden shadow-md cursor-pointer aspect-video bg-gray-200">
+                            <img src="${item.img}" alt="${item.title}" class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex flex-col justify-end p-6">
+                                <span class="bg-brand-600 text-white text-xs px-2 py-1 rounded w-fit mb-2">${item.tag}</span>
+                                <h4 class="text-white font-bold text-lg translate-y-4 group-hover:translate-y-0 transition duration-300">${item.title}</h4>
+                            </div>
+                        </div>
+                    `;
+                });
+                grid.innerHTML = html;
+            }, 300); // Fake network delay
+        }
+
+        function filterPortfolio(category) {
+            renderPortfolio(category);
+        }
+
+        function renderFAQ() {
+            const container = document.getElementById('faq-container');
+            let html = '';
+            APP_DATA.faq.forEach((item, index) => {
+                html += `
+                    <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                        <button class="w-full p-5 text-left font-semibold flex justify-between items-center bg-gray-50 dark:bg-gray-800" onclick="toggleAccordion(this)">
+                            <span>${item.q}</span>
+                            <i class="fas fa-chevron-down transition-transform"></i>
+                        </button>
+                        <div class="hidden p-5 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 text-sm border-t border-gray-100 dark:border-gray-800">
+                            ${item.a}
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function toggleAccordion(btn) {
+            const content = btn.nextElementSibling;
+            const icon = btn.querySelector('i');
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+
+        // --- CALCULATOR LOGIC ---
+        
+        let calcState = { base: 50000, deadlineMultiplier: 1, difficultyMultiplier: 1, addons: 0 };
+
+        function setTaskType(btn, price) {
+            // UI Reset
+            document.querySelectorAll('.task-btn').forEach(b => {
+                b.classList.remove('border-brand-500', 'bg-brand-50', 'text-brand-700');
+                b.classList.add('border-gray-200', 'dark:border-gray-700');
+            });
+            // Active State
+            btn.classList.remove('border-gray-200', 'dark:border-gray-700');
+            btn.classList.add('border-brand-500', 'bg-brand-50', 'text-brand-700');
+            
+            calcState.base = price;
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            // Difficulty
+            const diffVal = parseFloat(document.getElementById('difficulty-slider').value);
+            calcState.difficultyMultiplier = diffVal;
+            const diffLabels = {1: 'Mudah', 1.5: 'Sedang', 2: 'Susah', 2.5: 'Sangat Susah', 3: 'Expert'};
+            document.getElementById('diff-label').innerText = diffLabels[diffVal] || diffVal + 'x';
+
+            // Deadline (Inverse logic: faster = more expensive)
+            const deadVal = parseInt(document.getElementById('deadline-slider').value);
+            document.getElementById('deadline-label').innerText = deadVal + ' Hari';
+            // Simple logic: 7 days = 1x, 1 day = 2x
+            calcState.deadlineMultiplier = 1 + ((7 - deadVal) * 0.15);
+
+            // Addons
+            let addonTotal = 0;
+            document.querySelectorAll('.addon-check:checked').forEach(cb => {
+                addonTotal += parseInt(cb.value);
+            });
+            calcState.addons = addonTotal;
+
+            // Final Calc
+            let total = (calcState.base * calcState.difficultyMultiplier * calcState.deadlineMultiplier) + calcState.addons;
+            
+            // Animation Number
+            animateValue(document.getElementById('display-price'), total);
+        }
+
+        function animateValue(obj, end) {
+            let startTimestamp = null;
+            const duration = 500;
+            const startStr = obj.innerHTML.replace(/[^0-9]/g, '');
+            const start = parseInt(startStr) || 0;
+            
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                
+                // Format IDR
+                obj.innerHTML = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumSignificantDigits: 3 }).format(value);
+                
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function scrollToOrder() {
+            document.getElementById('order').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- ORDER & WHATSAPP ---
+
+        document.getElementById('order-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validation
+            const name = document.getElementById('order-name').value;
+            const contact = document.getElementById('order-contact').value;
+            const category = document.getElementById('order-category').value;
+            const detail = document.getElementById('order-detail').value;
+            const deadline = document.getElementById('order-deadline').value;
+
+            if(category.includes("Pilih")) {
+                showToast('Harap pilih kategori tugas!', 'error');
+                return;
+            }
+
+            // Generate Order ID
+            const orderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+
+            // Construct Message
+            const message = `
+*PESANAN BARU VIA WEB* 🚀
+---------------------------
+🆔 *ID Pesanan:* ${orderId}
+👤 *Nama:* ${name}
+📞 *Kontak:* ${contact}
+📂 *Kategori:* ${category}
+📅 *Deadline:* ${new Date(deadline).toLocaleString('id-ID')}
+
+📝 *Detail Tugas:*
+${detail}
+
+---------------------------
+Mohon dicek dan info harganya admin! Terima kasih.
+            `.trim();
+
+            const encodedMsg = encodeURIComponent(message);
+            const waNumber = '6281275648770';
+            
+            showToast('Mengalihkan ke WhatsApp...', 'success');
+            
+            setTimeout(() => {
+                window.open(`https://wa.me/${waNumber}?text=${encodedMsg}`, '_blank');
+            }, 1000);
+        });
+
+        // --- TOAST NOTIFICATION SYSTEM ---
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                info: 'bg-brand-600'
+            };
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                info: 'fa-info-circle'
+            };
+
+            toast.className = `${colors[type]} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 transform translate-x-full transition-transform duration-300 min-w-[300px]`;
+            toast.innerHTML = `
+                <i class="fas ${icons[type]} text-xl"></i>
+                <span class="font-medium text-sm">${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            // Animate In
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-x-full');
+            });
+
+            // Remove after 3s
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // --- LIVE TICKER SYSTEM ---
+
+        function startLiveTicker() {
+            const ticker = document.getElementById('live-ticker');
+            const title = document.getElementById('ticker-title');
+            const desc = document.getElementById('ticker-desc');
+            
+            let i = 0;
+
+            setInterval(() => {
+                // Hide
+                ticker.classList.remove('translate-y-0', 'opacity-100');
+                ticker.classList.add('translate-y-20', 'opacity-0');
+
+                // Update Data & Show after delay
+                setTimeout(() => {
+                    const data = APP_DATA.recentOrders[i];
+                    title.innerText = "Pesanan Baru Masuk!";
+                    desc.innerText = `${data.name} - ${data.item} (Baru saja)`;
+                    
+                    ticker.classList.remove('translate-y-20', 'opacity-0');
+                    ticker.classList.add('translate-y-0', 'opacity-100');
+
+                    i = (i + 1) % APP_DATA.recentOrders.length;
+                }, 1000);
+
+            }, 8000); // Every 8 seconds
+        }
+
+        // --- MOBILE NAV INTERACTION ---
+        function activateMobileNav(el) {
+            document.querySelectorAll('.nav-mobile').forEach(n => {
+                n.classList.remove('text-brand-600');
+                n.classList.add('text-gray-400');
+            });
+            el.classList.remove('text-gray-400');
+            el.classList.add('text-brand-600');
+        }
+
+    </script>
+</body>
+</html>
